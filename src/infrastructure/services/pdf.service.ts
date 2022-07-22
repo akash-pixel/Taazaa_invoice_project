@@ -3,13 +3,13 @@ import fs from 'fs' ;
 
 export default class PDF{
 
-    private getDate( str:string ) { 
+    private getDate( str:string ) : string { 
         const d=new Date(str); 
         const month = d.getMonth() +1; 
         return d.getDate()+"/"+ month +"/"+ d.getFullYear() 
     }
 
-    public generatepdf( result: any ){
+    public generatepdf( result: any ) :void {
         const doc = new PDFDocument({font: 'Times-Roman'})
 
         // Saving pdf doc

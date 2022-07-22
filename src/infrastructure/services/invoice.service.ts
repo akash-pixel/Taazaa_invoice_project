@@ -1,6 +1,5 @@
-import { IInputInvoce, IInvoice, IItem } from "../api.models/invoice.interfaces";
+import { IInputInvoice, IInvoice, IItem } from "../api.models/invoice.interfaces";
 import { InvoiceRepository } from "../repositories/invoice.repository";
-import * as path from 'path';
 import PDF from "./pdf.service";
 
 export default class InvoiceService{
@@ -11,110 +10,106 @@ export default class InvoiceService{
         this.repository = new InvoiceRepository()  
     }
 
-    public async getAllInvoices() {
+    public async getAllInvoices() : Promise<any> {
         return await this.repository.getAllInvoices() ;
     }
 
-    public async getInvoice( invoiceno: any ) {
-        if( invoiceno.length < 1 || isNaN(invoiceno) ){
-            console.log("Invalid Invoice number.")
+    public async getInvoice( invoiceNumber: any ): Promise<any> {
+        if( invoiceNumber.length < 1 || isNaN(invoiceNumber) ){
             return "Invalid Invoice number."
         }
-        return await this.repository.getInvoice( invoiceno ) ;
+        return await this.repository.getInvoice( invoiceNumber ) ;
     }
 
-    public async createInvoice( inv: IInputInvoce  ){
+    public async createInvoice( invoice: IInputInvoice  ): Promise<Object | String> {
         // Invoice number validation
-        const isNumberValid = await this.isInvoiceNoValid(inv.Invoiceno)
+        const isNumberValid = await this.isInvoiceNoValid(invoice.InvoiceNumber)
         if( !isNumberValid ){
             return "Invalid invoice number"
         }
 
         //  Data validation
-        if( !this.isInvoiceValid(inv) )
+        if( !this.isInvoiceValid(invoice) )
             return "Invalid Data"
 
         // Calculations
-        const { invoiceDetails, items } = this.Calculations( inv )
+        const { invoiceDetails, items } = this.Calculations( invoice )
 
         // Saving data
         this.repository.createInvoice( invoiceDetails, items )
         return { invoiceDetails, items } ;
     }
 
-    public async deleteInvoice( invoiceno:any ) {
-        if( isNaN( invoiceno ) && invoiceno.length < 1 )
+    public async deleteInvoice( invoiceNumber:any ) : Promise<String> {
+        if( isNaN( invoiceNumber ) && invoiceNumber.length < 1 )
             return "Its not a number."
 
-        await this.repository.deleteInvoice( invoiceno )
-        return `${invoiceno} has been deleted.`
+        await this.repository.deleteInvoice( invoiceNumber )
+        return `${invoiceNumber} has been deleted.`
     }
 
-    public async deleteItemFromInvoice( invoiceno:string, itemName:string ){
-        await this.repository.deleteItemFromInvoice( invoiceno, itemName  )
+    public async deleteItemFromInvoice( invoiceNumber:string, itemName:string ): Promise<String> {
+        await this.repository.deleteItemFromInvoice( invoiceNumber, itemName  )
         return `${itemName} is deleted.`
     }
 
-    public async updateInvoice ( inv: IInputInvoce ) {
-        const num = await this.repository.isValidInvoiceNo(inv.Invoiceno)
+    public async updateInvoice ( invoice: IInputInvoice ): Promise<String > {
+        const num = await this.repository.isValidInvoiceNo(invoice.InvoiceNumber)
         
-        if( isNaN(inv.Invoiceno) || num ){
+        if( isNaN(invoice.InvoiceNumber) || num ){
             return "Invalid invoice number"
         }
         // Data validation
-        if( !this.isInvoiceValid(inv) )
+        if( !this.isInvoiceValid(invoice) )
             return "Invalid Data"
 
-        const { invoiceDetails } = this.Calculations( inv )
+        const { invoiceDetails } = this.Calculations( invoice )
         await this.repository.update( invoiceDetails )
-        return `${inv.Invoiceno} is been updated.`
+        return `${invoice.InvoiceNumber} is been updated.`
     }
 
-    private Calculations( inv: IInputInvoce): { invoiceDetails: IInvoice, items: any  } {
-        let Subtotal : number = 0;
-        const items  = inv.Items;
-        delete inv.Items;
-
-        items?.forEach( (item: Partial< IItem > ) => {
-            item["Invoiceno"] = inv.Invoiceno ;
-            item["Amount"] = item.Price! * item.Quantity! ;
-            Subtotal += item.Amount
-        })
-
-        const Totalamount = Subtotal;
-        const Amountbalance = Totalamount - inv.Amountpaid
-        const invoiceDetails: IInvoice = { ...inv, Subtotal, Totalamount, Amountbalance }
-
-        return { invoiceDetails, items }
-    }
-
-    public isInvoiceValid( inv:IInputInvoce ) {
-        if( inv.Billto.length < 1 || inv.Billfrom.length < 1  )
+    public isInvoiceValid( invoice:IInputInvoice ): boolean {
+        if( invoice.InvoicedBy.length < 1 || invoice.InvoicedTo.length < 1  )
             return false
 
-        // let filetedList = inv.Items?.filter(item => {
+        // let filetedList = invoice.Items.filter(item => {
         //     if( item.Name.length < 1 || item.Price < 0 || item.Quantity < 0 )
         //         return false
         // })
         
         return true
     }
+    
+    public async getPDF( invoiceNumber: String ): Promise<String> {
+        const result = await this.getInvoice(invoiceNumber) ;
+        new PDF().generatepdf( result )
+        
+        return `./pdf/${invoiceNumber}.pdf`
+    }
+    
+    private async isInvoiceNoValid( invoiceNumber: any ): Promise<boolean> {
 
-    private async isInvoiceNoValid( invoiceno: any ): Promise<boolean> {
-
-        if( isNaN( invoiceno ) || invoiceno.length < 1 )
+        if( isNaN( invoiceNumber ) || invoiceNumber.length < 1 )
             return false;
 
-        const isValid: boolean =  await this.repository.isValidInvoiceNo( invoiceno ) ;
+        const isValid: boolean =  await this.repository.isValidInvoiceNo( invoiceNumber ) ;
         return isValid;
     }
 
-    public async getPDF( invoiceno: string ){
-        
-        const result = await this.getInvoice(invoiceno) ;
-        new PDF().generatepdf( result )
+    private Calculations( invoice: IInputInvoice ): {invoiceDetails: IInvoice, items: any } { 
+        let SubTotal = 0;
+        const items  = invoice.Items;
+        delete invoice.Items;
 
-        return `./pdf/${invoiceno}.pdf`
+        items?.forEach( (item: Partial< IItem> ) => {
+            item.InvoiceNumber = invoice.InvoiceNumber ;
+            item.Amount = item.Price! * item.Quantity! ;
+            SubTotal += item.Amount
+        })
+
+        const TotalAmount = SubTotal;
+        const AmountBalance = TotalAmount - invoice.AmountPaid!
+        const invoiceDetails: IInvoice = { ...invoice, SubTotal, TotalAmount, AmountBalance }
+        return { invoiceDetails, items }
     }
-
 }

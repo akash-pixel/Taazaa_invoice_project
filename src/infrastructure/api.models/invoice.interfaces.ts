@@ -1,7 +1,12 @@
+// filename: invoice.view.model.ts
+
+// Class Name: IInvoiceViewModel{
+
+// }
 
 export interface IItem {
     InvoiceNumber: number,
-    ItemNumber: number,
+    // ItemNumber: number,
     Name: string,
     Price: number,
     Quantity: number,
@@ -17,13 +22,13 @@ export interface IInvoice {
     InvoiceGeneratedOn : Date,
     DueDate : Date,
     Note ? : string | null,
-    SubTotal: number,               // Example  100 + 200 = 300
-    TotalAmount: number,            //  300 + 5% = 315
-    AmountPaid: number,             //  250
-    AmountBalance: number           //  315 - 250 = 65
+    SubTotal: number,                             // Example  100 + 200 = 300
+    TotalAmount: number,                         //  300 + 5% = 315
+    AmountPaid: Required<number> ,               //  250
+    AmountBalance: number                        //  315 - 250 = 65
 }
 
-export interface IInputInvoce extends Omit< IInvoice, "AmountBalance" | "TotalAmount" | "SubTotal" >  {
+export interface IInputInvoice extends Omit< IInvoice, "AmountBalance" | "TotalAmount" | "SubTotal" >  {
 
     Items? : Array< Omit< IItem, "Amount" | "InvoiceNumber" >>
 }
