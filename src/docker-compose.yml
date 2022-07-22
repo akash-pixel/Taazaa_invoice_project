@@ -1,0 +1,28 @@
+version: "2.4"
+services: 
+    postgres:
+      image: postgres
+      environment:
+        POSTGRES_USER: user
+        POSTGRES_PASSWORD: password
+        PGDATA: /data/postgres
+      volumes:
+        - postgres-data:/data/postgres
+      ports:
+        - "5432:5432"
+      restart: always
+
+    pgadmin:
+      image: dpage/pgadmin4
+      environment:
+        PGADMIN_DEFAULT_EMAIL: akash.gupta@taazaa.com
+        PGADMIN_DEFAULT_PASSWORD: password
+      volumes:
+        - pgadmin:/root/.pgadmin
+      ports:
+        - "8090:80"
+      restart: always
+
+volumes:
+  postgres-data:
+  pgadmin:
