@@ -1,61 +1,53 @@
-import PDFDocument from 'pdfkit'; 
 import fs from 'fs' ;
+import path from 'path';
+import * as puppeteer from 'puppeteer';
+import Handlebars from 'handlebars';
+
+import { IInvoiceViewModel } from '../api.models/invoice.view.model';
 
 export default class PDF{
 
-    private getDate( str:string ) : string { 
-        const d=new Date(str); 
+    private getDate( date:Date ) : string { 
+        const d=new Date(date); 
         const month = d.getMonth() +1; 
         return d.getDate()+"/"+ month +"/"+ d.getFullYear() 
     }
 
-    public generatepdf( result: any ) :void {
-        const doc = new PDFDocument({font: 'Times-Roman'})
+    public async generatePdf( invoice: IInvoiceViewModel ) : Promise<void> {
 
-        // Saving pdf doc
-        doc.pipe( fs.createWriteStream(`./pdf/${result.invoiceno}.pdf`) );
+        var templateHtml = fs.readFileSync( path.join(process.cwd(), 'src/templates/pdf.html'), 'utf8' )
+        var template = Handlebars.compile(templateHtml);
+        var html = template({invoice})
 
-        // Text to add in pdf
-        let alignLeft = `From: ${result.billfrom} \nTo: ${result.billto} \nShip to: ${result.shipto}`
+        
+    	var pdfPath = path.join('pdf', `${invoice.InvoiceNumber}.pdf`);
 
-        // For date and po number
-        let alignRight = `Date: ${this.getDate(result.billdate)} \nDue Date: ${ this.getDate(result.duedate)}
-        PO Number: ${result.ponumber}`
-
-        // For Item details
-        let itemList: string = "";
-        for( let i =0; i< result.itemnames.length; i++ ){
-            itemList += `${result.itemnames[i]}              ${result.itemquantity[i]}              ${result.itemprices[i]}              ${result.amount[i]} \n`
+        var options = {
+            width: '1230px',
+            headerTemplate: "<p></p>",
+            footerTemplate: "<p></p>",
+            displayHeaderFooter: false,
+            margin: {
+                top: "10px",
+                bottom: "30px"
+            },
+            printBackground: true,
+            path: pdfPath
         }
 
-        let total = `Subtotal: ${result.subtotal} \nTotal: ${result.totalamount} \nPaid: ${result.amountpaid} 
-        \nBalance: ${result.amountbalance}`
+        const browser = await puppeteer.launch({
+            args: ['--no-sandbox'],
+            headless: true
+        });
 
-        // Adding functionality
-        doc
-        .fontSize( 22 )
-        .text( "INVOICE" , 100, 100 , {align: "center" })
-        .moveDown();
-        
-        doc
-        .fontSize( 16 )
-        .text( `Invoice no.: ${result.invoiceno}`, {align: "left" });
+        var page = await browser.newPage();
 
-        doc
-        .fontSize( 15 )
-        .text( alignLeft, {align: "left", width: 500 } )
-        .moveUp().moveUp().moveUp()
-        .text( alignRight, { align: "right", width: 400} )
-        .moveDown();
-        
-        doc
-        .text("Item              Quantity       Price       Amount").moveDown()
-        .text( itemList )
-        .text( total, {align: "right"} )
-        .text( "Note :"+ result.note );
+        await page.goto(`data:text/html;charset=UTF-8,${html}`, {
+            waitUntil: 'networkidle0'
+        })
 
-        // Stop writing in the pdf file
-        doc.end()
+        await page.pdf(options);
+        await browser.close()
     }
 
 }

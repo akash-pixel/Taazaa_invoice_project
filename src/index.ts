@@ -13,6 +13,9 @@ const app = express();
 app.use( express.urlencoded({extended: true}) );
 app.use( express.json() )
 
+// Static folder
+app.use( express.static("public") )
+
 // todo: Plug with actual tenant Id from process
 
 const setup = (err: Error | null) => {

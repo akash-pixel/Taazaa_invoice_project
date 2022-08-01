@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Invoice</title>
+</head>
+<body style="margin: 50px">
+    <div>
+        <div style="font-size: 30px ; height: 10%; width: 100%; text-align:center; margin: 5px" >
+          Invoice
+        </div>
+        <hr/>
+        
+        <div style="display:flex; justify-content: space-between; ">
+          <div >
+            <label>Invoice no. : {{ invoice.InvoiceNumber }} </label><br/>
+            <label>Invoiced By: {{invoice.InvoicedBy}} </label><br/>
+            <label>Invoiced To: {{invoice.InvoicedTo}} </label><br/>
+            <label>Shipping Address: {{invoice.ShippingAddress}} </label><br/>
+          </div>
+      
+          <div>
+            <label>Date: {{ invoice.InvoiceGeneratedOn }} </label><br/>
+            <label>Due Date: {{ invoice.DueDate }} </label><br/>
+            <label>PO Number: {{ invoice.PONumber }} </label><br/>
+          </div>
+        </div>
+        <hr/>
+      
+        <table>
+          <tr style="margin: 15px">
+            <th > Item </th>
+            <th> Quantity </th>
+            <th> Price </th>
+            <th> Amount </th>
+          </tr>
+      
+            {{#each invoice.Items}}
+                <tr>
+                  <td> {{ this.Name }}</td>
+                  <td> {{ this.Quantity }}</td>
+                  <td> {{ this.Price }}</td>
+                  <td> {{ this.Amount }}</td>
+                </tr>
+            {{/each}}
+      
+        </table>
+        
+        <div style="align-items: right ; margin-top: 20px">
+          <label>Subtotal : {{ invoice.SubTotal }} </label><br/>
+          <label>Total : {{invoice.TotalAmount}} </label><br/>
+          <label>Amount Paid : {{invoice.AmountPaid}} </label><br/>
+          <label>Amount Balance : {{invoice.AmountBalance}} </label><br/>    
+        </div>
+    </div>
+      
+</body>

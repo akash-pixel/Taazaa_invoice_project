@@ -10,17 +10,18 @@ export default class Invoice{
 
     public init( router: express.Router){
         // GET
-        router.get("/api/invoices", this.controller.getInvoices )
-        router.get( "/api/:invoiceno", this.controller.getInvoice )
-        router.get("/api/pdf/:invoiceno", this.controller.downloadInvoice )
+        // router.get("/api/html/:invoiceNumber", this.controller.getPDF )
+
+        router.get( "/api/:invoiceNumber", this.controller.getInvoice )
+        router.get("/api/pdf/:invoiceNumber", this.controller.getPDF )
 
         // POST
         router.post("/api/", this.controller.createInvoice )
         // PUT
-        router.put( "/api/:invoiceno", this.controller.updateInvoice )
+        router.put( "/api/:invoiceNumber", this.controller.updateInvoice )
         // DELETE
-        router.delete("/api/:invoiceno", this.controller.deleteInvoice )
-        router.delete("/api/:invoiceno/:item", this.controller.deleteItem )
+        router.delete("/api/:invoiceNumber", this.controller.deleteInvoice )
+        router.delete("/api/:invoiceNumber/:item", this.controller.deleteItem )
     }
 
 }

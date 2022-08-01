@@ -4,7 +4,6 @@
  */
 import * as express from "express";
 
-import { DummyRoutes } from "./dummy.routes";
 import Invoice from "./invoice.route";
 
 export default class Routes {
